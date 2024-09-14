@@ -5,13 +5,20 @@ ARG VERSION=24.04
 FROM ubuntu:$VERSION
 
 # Environments
-ENV DEBIAN_FRONTEND=noninteractive
-ENV TZ=Asia/Shanghai
-ENV LANG=en_US.utf8
 ENV OPT_APP="/opt/app"
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Asia/Shanghai   \
+    LANG=en_US.UTF-8   \
+    LANGUAGE=en_US:en  \
+    LC_ALL=en_US.UTF-8 \
+    RUBYOPT=-W0
 
 # Use USTC mirrors
 RUN sed -i 's#//.*.ubuntu.com#//mirrors.ustc.edu.cn#g' /etc/apt/sources.list.d/ubuntu.sources
+
+# arm-gnu-toolchain
+ARG GCC_AARCH64=https://developer.arm.com/-/media/Files/downloads/gnu/13.3.rel1/binrel/arm-gnu-toolchain-13.3.rel1-aarch64-aarch64-none-elf.tar.xz
+ARG GCC_X86_64=https://developer.arm.com/-/media/Files/downloads/gnu/13.3.rel1/binrel/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-elf.tar.xz
 
 ARG BASEMENT_PACKAGES="\
     build-essential \
@@ -19,6 +26,7 @@ ARG BASEMENT_PACKAGES="\
     openssl \
     openssh-server \
     openssh-client \
+    gdb-multiarch \
     tzdata \
     locales \
     net-tools \
@@ -33,6 +41,10 @@ ARG BASEMENT_PACKAGES="\
     autoconf \
     automake \
     libtool \
+    bison \
+    flex \
+    gawk \
+    gperf \
     git \
     curl \
     wget \
@@ -41,12 +53,22 @@ ARG BASEMENT_PACKAGES="\
     zip \
     unzip \
     file \
+    gdb \
     yasm \
     nasm \
-    pkg-config \
-    texinfo \
     clang \
     llvm \
+    ruby \
+    ruby-dev \
+    texinfo \
+    virtualenv \
+    ninja-build \
+    pkg-config \
+    binutils-dev \
+    libboost-all-dev \
+    libpixman-1-dev \
+    libglib2.0-dev \
+    libusb-1.0.0-dev \
     libclang-dev \
     libass-dev \
     libfreetype6-dev \
@@ -79,15 +101,18 @@ ARG BASEMENT_PACKAGES="\
     libpng-dev \
     libtiff-dev \
     libssl-dev \
+    libelf-dev \
     gfortran \
     openexr \
     libatlas-base-dev \
     python3 \
     python3-dev \
+    python3-venv \
     python3-pip \
     python3-numpy \
     libtbb-dev \
     libopenexr-dev \
+    libhidapi-dev \
     libgstreamer1.0-dev \
     libgstreamer-plugins-base1.0-dev \
     libswresample-dev \
@@ -104,22 +129,94 @@ ARG ADDITIONAL_DEVELOPMENT_PACKAGES="\
     wrk \
     htop \
     tmux \
+    screen \
+    rsync \
+    qemu-kvm \
+    virtinst \
+    bridge-utils \
+    libvirt-daemon \
+    libvirt-clients \
+    libvirt-daemon-system \
     "
 
 # Check package availability
 RUN apt-get update && \
+    apt-get upgrade -y && \
     echo "$BASEMENT_PACKAGES $ADDITIONAL_DEVELOPMENT_PACKAGES" | \
     xargs -n 1 bash -c 'apt-cache show $0 >/dev/null 2>&1 || { echo "Package $0 not found"; exit 1; }'
 
 # Update apt source and install necessary packages
 RUN apt-get update \
     && apt-get install -y $BASEMENT_PACKAGES $ADDITIONAL_DEVELOPMENT_PACKAGES \
-    && apt-get clean \
+    && apt-get clean -q -y \
+    && apt-get autoremove -q -y \
+    && apt-get autoclean -q -y \
     && rm -rf /var/lib/apt/lists/*
 
 # rust
 WORKDIR /src
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+
+# arm-gnu-toolchain
+WORKDIR /src
+RUN if [ "$(uname -m)" = "aarch64" ]; then wget ${GCC_AARCH64}; else wget ${GCC_X86_64}; fi; \
+    tar -xJvf arm-gnu-toolchain-13.3* && \
+    rm -rf arm-gnu-toolchain-13.3*.tar.xz && \
+    mv arm-gnu-toolchain-13.3* arm-gnu-toolchain-13.3 && \
+    mv arm-gnu-toolchain-13.3 ${OPT_APP}/ 
+
+# Ruby
+WORKDIR /src
+COPY Gemfile .
+RUN gem install bundler && \
+    bundle config set --local without 'development' && \
+    bundle install --retry 3
+
+## Qemu .gitmodules 中的 https://gitlab.com/ 无法访问
+# WORKDIR /src
+# COPY qemu.gitmodules .
+# RUN git clone --recurse-submodules --depth 1 -b stable-9.1 https://ghp.ci/https://github.com/qemu/qemu.git && \
+#     cd qemu && \
+#     ./configure \
+#     --prefix=${OPT_APP}/qemu \
+#     --target-list=aarch64-softmmu \
+#     --enable-modules \
+#     --enable-tcg-interpreter \
+#     --enable-debug-tcg       \
+#     --enable-slirp \
+#     --enable-linux-user \
+#     --enable-system \
+#     --disable-werror \
+#     --disable-sdl \
+#     --disable-vnc \
+#     --disable-gtk \
+#     --disable-opengl \
+#     --disable-spice \
+#     --disable-xen \
+#     --disable-tools \
+#     --disable-curses \
+#     --python=/usr/bin/python3 && \
+#     ninja -j$(nproc) && \
+#     ninja install && \
+#     ldconfig && \
+#     ninja clean
+
+# openocd
+WORKDIR /src
+RUN git clone --recurse-submodules --depth 1 -b master https://ghp.ci/https://github.com/openocd-org/openocd.git && \
+    cd openocd && \
+    ##git checkout tags/v0.12.0 && \
+    ./bootstrap && \
+    ./configure \
+    --prefix=${OPT_APP}/openocd \
+    --enable-sysfsgpio \
+    --enable-ftdi \
+    --enable-stlink \
+    --enable-cmsis-dap && \
+    make -j$(nproc) && \
+    make install && \
+    ldconfig && \
+    make clean
 
 # ffmpeg
 WORKDIR /src
@@ -171,8 +268,12 @@ RUN git clone --recurse-submodules --depth 1 -b 4.x https://ghp.ci/https://githu
     ldconfig && \
     make clean
 
-ENV PATH="$HOME/.cargo/bin:${OPT_APP}/ffmpeg/bin:${OPT_APP}/opencv/bin:$PATH"
-ENV LD_LIBRARY_PATH="${OPT_APP}/ffmpeg/lib:${OPT_APP}/opencv/lib:$LD_LIBRARY_PATH"
+ENV PATH="$HOME/.cargo/bin:${OPT_APP}/openocd/bin:${OPT_APP}/ffmpeg/bin:${OPT_APP}/opencv/bin:$PATH"
+ENV LD_LIBRARY_PATH="${OPT_APP}/openocd/lib:${OPT_APP}/ffmpeg/lib:${OPT_APP}/opencv/lib:$LD_LIBRARY_PATH"
+
+# GDB
+COPY .gdbinit /root/.gdbinit
+COPY auto /root/.gdbinit.d/auto
 
 # Timezone and locale
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime \
