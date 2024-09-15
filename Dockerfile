@@ -5,9 +5,9 @@ ARG VERSION=24.04
 FROM ubuntu:$VERSION
 
 # Environments
-ENV OPT_APP="/opt/app"
-ENV DEBIAN_FRONTEND=noninteractive
-ENV TZ=Asia/Shanghai   \
+ENV OPT_APP="/opt/app" \
+    DEBIAN_FRONTEND=noninteractive \
+    TZ=Asia/Shanghai   \
     LANG=en_US.UTF-8   \
     LANGUAGE=en_US:en  \
     LC_ALL=en_US.UTF-8 \
@@ -147,26 +147,29 @@ RUN apt-get update && \
 
 # Update apt source and install necessary packages
 RUN apt-get update \
-    && apt-get install -y $BASEMENT_PACKAGES $ADDITIONAL_DEVELOPMENT_PACKAGES \
+    && apt-get install --no-install-recommends -y $BASEMENT_PACKAGES $ADDITIONAL_DEVELOPMENT_PACKAGES \
     && apt-get clean -q -y \
     && apt-get autoremove -q -y \
     && apt-get autoclean -q -y \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+WORKDIR /src
+
+# GDB
+COPY .gdbinit /root/.gdbinit
+COPY auto /root/.gdbinit.d/auto
 
 # rust
-WORKDIR /src
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
 # arm-gnu-toolchain
-WORKDIR /src
 RUN if [ "$(uname -m)" = "aarch64" ]; then wget ${GCC_AARCH64}; else wget ${GCC_X86_64}; fi; \
-    tar -xJvf arm-gnu-toolchain-13.3* && \
+    mkdir -p ./arm-gnu-toolchain && \
+    tar -xJvf arm-gnu-toolchain-13.3* -C ./arm-gnu-toolchain && \
     rm -rf arm-gnu-toolchain-13.3*.tar.xz && \
-    mv arm-gnu-toolchain-13.3* arm-gnu-toolchain-13.3 && \
-    mv arm-gnu-toolchain-13.3 ${OPT_APP}/ 
+    mv ./arm-gnu-toolchain ${OPT_APP}/
 
 # Ruby
-WORKDIR /src
 COPY Gemfile .
 RUN gem install bundler && \
     bundle config set --local without 'development' && \
@@ -174,7 +177,6 @@ RUN gem install bundler && \
 
 ## Qemu .gitmodules 中的 https://gitlab.com/ 无法访问
 # WORKDIR /src
-# COPY qemu.gitmodules .
 # RUN git clone --recurse-submodules --depth 1 -b stable-9.1 https://ghp.ci/https://github.com/qemu/qemu.git && \
 #     cd qemu && \
 #     ./configure \
@@ -202,7 +204,6 @@ RUN gem install bundler && \
 #     ninja clean
 
 # openocd
-WORKDIR /src
 RUN git clone --recurse-submodules --depth 1 -b master https://ghp.ci/https://github.com/openocd-org/openocd.git && \
     cd openocd && \
     ##git checkout tags/v0.12.0 && \
@@ -219,7 +220,6 @@ RUN git clone --recurse-submodules --depth 1 -b master https://ghp.ci/https://gi
     make clean
 
 # ffmpeg
-WORKDIR /src
 RUN git clone --recurse-submodules --depth 1 -b release/7.0 https://ghp.ci/https://github.com/FFmpeg/FFmpeg.git && \
     cd FFmpeg && \
     ./configure \
@@ -244,7 +244,6 @@ RUN git clone --recurse-submodules --depth 1 -b release/7.0 https://ghp.ci/https
     make clean
 
 # opencv
-WORKDIR /src
 RUN git clone --recurse-submodules --depth 1 -b 4.x https://ghp.ci/https://github.com/opencv/opencv.git && \
     git clone --recurse-submodules --depth 1 -b 4.x https://ghp.ci/https://github.com/opencv/opencv_contrib.git && \
     cd opencv && \
@@ -270,10 +269,6 @@ RUN git clone --recurse-submodules --depth 1 -b 4.x https://ghp.ci/https://githu
 
 ENV PATH="$HOME/.cargo/bin:${OPT_APP}/openocd/bin:${OPT_APP}/ffmpeg/bin:${OPT_APP}/opencv/bin:$PATH"
 ENV LD_LIBRARY_PATH="${OPT_APP}/openocd/lib:${OPT_APP}/ffmpeg/lib:${OPT_APP}/opencv/lib:$LD_LIBRARY_PATH"
-
-# GDB
-COPY .gdbinit /root/.gdbinit
-COPY auto /root/.gdbinit.d/auto
 
 # Timezone and locale
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime \
