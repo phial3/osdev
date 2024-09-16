@@ -131,12 +131,12 @@ ARG ADDITIONAL_DEVELOPMENT_PACKAGES="\
     tmux \
     screen \
     rsync \
-    qemu-kvm \
-    virtinst \
-    bridge-utils \
-    libvirt-daemon \
-    libvirt-clients \
-    libvirt-daemon-system \
+    # qemu-kvm \
+    # virtinst \
+    # bridge-utils \
+    # libvirt-daemon \
+    # libvirt-clients \
+    # libvirt-daemon-system \
     "
 
 # Check package availability
@@ -176,32 +176,31 @@ RUN gem install bundler && \
     bundle install --retry 3
 
 ## Qemu .gitmodules 中的 https://gitlab.com/ 无法访问
-# WORKDIR /src
-# RUN git clone --recurse-submodules --depth 1 -b stable-9.1 https://ghp.ci/https://github.com/qemu/qemu.git && \
-#     cd qemu && \
-#     ./configure \
-#     --prefix=${OPT_APP}/qemu \
-#     --target-list=aarch64-softmmu \
-#     --enable-modules \
-#     --enable-tcg-interpreter \
-#     --enable-debug-tcg       \
-#     --enable-slirp \
-#     --enable-linux-user \
-#     --enable-system \
-#     --disable-werror \
-#     --disable-sdl \
-#     --disable-vnc \
-#     --disable-gtk \
-#     --disable-opengl \
-#     --disable-spice \
-#     --disable-xen \
-#     --disable-tools \
-#     --disable-curses \
-#     --python=/usr/bin/python3 && \
-#     ninja -j$(nproc) && \
-#     ninja install && \
-#     ldconfig && \
-#     ninja clean
+RUN git clone --recurse-submodules --depth 1 -b stable-9.1 https://ghp.ci/https://github.com/qemu/qemu.git && \
+    cd qemu && \
+    ./configure \
+    --prefix=${OPT_APP}/qemu \
+    --target-list=aarch64-softmmu \
+    --enable-modules \
+    --enable-tcg-interpreter \
+    --enable-debug-tcg       \
+    --enable-slirp \
+    --enable-linux-user \
+    --enable-system \
+    --disable-werror \
+    --disable-sdl \
+    --disable-vnc \
+    --disable-gtk \
+    --disable-opengl \
+    --disable-spice \
+    --disable-xen \
+    --disable-tools \
+    --disable-curses \
+    --python=/usr/bin/python3 && \
+    ninja -j$(nproc) && \
+    ninja install && \
+    ldconfig && \
+    ninja clean
 
 # openocd
 RUN git clone --recurse-submodules --depth 1 -b master https://ghp.ci/https://github.com/openocd-org/openocd.git && \
