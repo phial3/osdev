@@ -153,7 +153,7 @@ RUN apt-get update \
     && apt-get autoclean -q -y \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-WORKDIR /src
+WORKDIR /code
 
 # GDB
 COPY .gdbinit /root/.gdbinit
@@ -180,7 +180,7 @@ RUN git clone --recurse-submodules --depth 1 -b stable-9.1 https://github.com/qe
     cd qemu && \
     ./configure \
     --prefix=${OPT_APP}/qemu \
-    --target-list=aarch64-softmmu \
+    ##--target-list=aarch64-softmmu \
     --enable-modules \
     --enable-tcg-interpreter \
     --enable-debug-tcg       \
@@ -249,7 +249,7 @@ RUN git clone --recurse-submodules --depth 1 -b 4.x https://github.com/opencv/op
     mkdir build && cd build && \
     cmake -D CMAKE_BUILD_TYPE=Release \
           -D CMAKE_INSTALL_PREFIX=${OPT_APP}/opencv \
-          -D OPENCV_EXTRA_MODULES_PATH=/src/opencv_contrib/modules \
+          -D OPENCV_EXTRA_MODULES_PATH=/code/opencv_contrib/modules \
           -D ENABLE_PRECOMPILED_HEADERS=OFF \
           -D WITH_TBB=ON \
           -D WITH_V4L=ON \
