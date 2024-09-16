@@ -176,7 +176,7 @@ RUN gem install bundler && \
     bundle install --retry 3
 
 ## Qemu .gitmodules 中的 https://gitlab.com/ 无法访问
-RUN git clone --recurse-submodules --depth 1 -b stable-9.1 https://ghp.ci/https://github.com/qemu/qemu.git && \
+RUN git clone --recurse-submodules --depth 1 -b stable-9.1 https://github.com/qemu/qemu.git && \
     cd qemu && \
     ./configure \
     --prefix=${OPT_APP}/qemu \
@@ -203,7 +203,7 @@ RUN git clone --recurse-submodules --depth 1 -b stable-9.1 https://ghp.ci/https:
     ninja clean
 
 # openocd
-RUN git clone --recurse-submodules --depth 1 -b master https://ghp.ci/https://github.com/openocd-org/openocd.git && \
+RUN git clone --recurse-submodules --depth 1 -b master https://github.com/openocd-org/openocd.git && \
     cd openocd && \
     ##git checkout tags/v0.12.0 && \
     ./bootstrap && \
@@ -219,7 +219,7 @@ RUN git clone --recurse-submodules --depth 1 -b master https://ghp.ci/https://gi
     make clean
 
 # ffmpeg
-RUN git clone --recurse-submodules --depth 1 -b release/7.0 https://ghp.ci/https://github.com/FFmpeg/FFmpeg.git && \
+RUN git clone --recurse-submodules --depth 1 -b release/7.0 https://github.com/FFmpeg/FFmpeg.git && \
     cd FFmpeg && \
     ./configure \
     --prefix=${OPT_APP}/ffmpeg \
@@ -243,8 +243,8 @@ RUN git clone --recurse-submodules --depth 1 -b release/7.0 https://ghp.ci/https
     make clean
 
 # opencv
-RUN git clone --recurse-submodules --depth 1 -b 4.x https://ghp.ci/https://github.com/opencv/opencv.git && \
-    git clone --recurse-submodules --depth 1 -b 4.x https://ghp.ci/https://github.com/opencv/opencv_contrib.git && \
+RUN git clone --recurse-submodules --depth 1 -b 4.x https://github.com/opencv/opencv.git && \
+    git clone --recurse-submodules --depth 1 -b 4.x https://github.com/opencv/opencv_contrib.git && \
     cd opencv && \
     mkdir build && cd build && \
     cmake -D CMAKE_BUILD_TYPE=Release \
