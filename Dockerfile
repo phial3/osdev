@@ -197,10 +197,10 @@ RUN git clone --recurse-submodules --depth 1 -b stable-9.1 https://github.com/qe
     --disable-tools \
     --disable-curses \
     --python=/usr/bin/python3 && \
-    ninja -j$(nproc) && \
-    ninja install && \
+    make -j$(nproc) && \
+    make install && \
     ldconfig && \
-    ninja clean
+    make clean
 
 # openocd
 RUN git clone --recurse-submodules --depth 1 -b master https://github.com/openocd-org/openocd.git && \
