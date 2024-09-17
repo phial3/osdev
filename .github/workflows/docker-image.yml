@@ -35,6 +35,6 @@ jobs:
       with:
         context: .
         push: true
-        file: ./Dockerfile
-        platforms: linux/amd64,linux/arm64
+        file: ./newDockerfile
+        platforms: linux/arm64
         tags: ${{ secrets.DOCKER_USERNAME }}/osdev:${{ github.event.inputs.release_version }}
