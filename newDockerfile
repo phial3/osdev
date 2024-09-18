@@ -7,13 +7,8 @@ FROM ubuntu:$VERSION
 LABEL maintainer="admin <<github.com/phial3/osdev>>"
 
 # Environments
-ENV OPT_APP="/opt/app" \
-    DEBIAN_FRONTEND=noninteractive \
-    TZ=Asia/Shanghai   \
-    LANG=en_US.UTF-8   \
-    LANGUAGE=en_US:en  \
-    LC_ALL=en_US.UTF-8 \
-    RUBYOPT=-W0
+ENV OPT_APP="/opt/app"
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Use USTC mirrors
 RUN sed -i 's#//.*.ubuntu.com#//mirrors.ustc.edu.cn#g' /etc/apt/sources.list.d/ubuntu.sources
@@ -265,6 +260,11 @@ RUN git clone --recurse-submodules --depth 1 -b 4.x https://github.com/opencv/op
 
 ENV PATH="$HOME/.cargo/bin:${OPT_APP}/openocd/bin:${OPT_APP}/ffmpeg/bin:${OPT_APP}/opencv/bin:$PATH"
 ENV LD_LIBRARY_PATH="${OPT_APP}/openocd/lib:${OPT_APP}/ffmpeg/lib:${OPT_APP}/opencv/lib:$LD_LIBRARY_PATH"
+ENV TZ=Asia/Shanghai   \
+    LANG=en_US.UTF-8   \
+    LANGUAGE=en_US:en  \
+    LC_ALL=en_US.UTF-8 \
+    RUBYOPT=-W0
 
 # Timezone and locale
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime \
