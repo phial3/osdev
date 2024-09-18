@@ -180,7 +180,7 @@ RUN git clone --recurse-submodules --depth 1 -b stable-9.1 https://github.com/qe
     cd qemu && \
     ./configure \
     --prefix=${OPT_APP}/qemu \
-    ##--target-list=aarch64-softmmu \
+    --target-list=aarch64-softmmu,aarch64-linux-user,x86_64-softmmu,x86_64-linux-user \
     --enable-modules \
     --enable-tcg-interpreter \
     --enable-debug-tcg       \
