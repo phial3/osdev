@@ -160,7 +160,6 @@ RUN locale-gen en_US.UTF-8; \
     tar -xJvf arm-gnu-toolchain-13.3*.tar.xz && \
     rm -rf arm-gnu-toolchain-13.3*.tar.xz && \
     mv ./arm-gnu-toolchain-13.3* ${OPT_APP}/ ; \
-    cd ~ ; \
     # Rubygems
     gem install bundler && \
     bundle config set --local without 'development' && \
