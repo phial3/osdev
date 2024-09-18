@@ -14,7 +14,7 @@ ENV OPT_APP="/opt/app" \
     RUBYOPT=-W0
 
 # Use USTC mirrors
-RUN sed -i 's#//.*.ubuntu.com#//mirrors.ustc.edu.cn#g' /etc/apt/sources.list.d/ubuntu.sources
+##RUN sed -i 's#//.*.ubuntu.com#//mirrors.ustc.edu.cn#g' /etc/apt/sources.list.d/ubuntu.sources
 
 # arm-gnu-toolchain
 ARG GCC_AARCH64=https://developer.arm.com/-/media/Files/downloads/gnu/13.3.rel1/binrel/arm-gnu-toolchain-13.3.rel1-aarch64-aarch64-none-elf.tar.xz
