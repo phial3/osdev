@@ -37,6 +37,7 @@ ARG BASEMENT_PACKAGES="\
     telnet \
     tcpdump \
     aptitude \
+    apt-utils \
     cmake \
     autoconf \
     automake \
@@ -164,10 +165,9 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
 # arm-gnu-toolchain
 RUN if [ "$(uname -m)" = "aarch64" ]; then wget ${GCC_AARCH64}; else wget ${GCC_X86_64}; fi; \
-    mkdir -p ./arm-gnu-toolchain && \
-    tar -xJvf arm-gnu-toolchain-13.3* -C ./arm-gnu-toolchain && \
+    tar -xJvf arm-gnu-toolchain-13.3*.tar.xz && \
     rm -rf arm-gnu-toolchain-13.3*.tar.xz && \
-    mv ./arm-gnu-toolchain ${OPT_APP}/
+    mv -v ./arm-gnu-toolchain-13.3* ${OPT_APP}/
 
 # Ruby
 COPY Gemfile .

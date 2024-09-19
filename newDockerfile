@@ -34,6 +34,7 @@ ARG BASEMENT_PACKAGES="\
     telnet \
     tcpdump \
     aptitude \
+    apt-utils \
     cmake \
     autoconf \
     automake \
@@ -159,7 +160,7 @@ RUN locale-gen en_US.UTF-8; \
     if [ "$(uname -m)" = "aarch64" ]; then wget ${GCC_AARCH64}; else wget ${GCC_X86_64}; fi; \
     tar -xJvf arm-gnu-toolchain-13.3*.tar.xz && \
     rm -rf arm-gnu-toolchain-13.3*.tar.xz && \
-    mv ./arm-gnu-toolchain-13.3* ${OPT_APP}/ ; \
+    mv -v ./arm-gnu-toolchain-13.3* ${OPT_APP}/ ; \
     # Rubygems
     gem install bundler && \
     bundle config set --local without 'development' && \
