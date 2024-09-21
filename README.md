@@ -1,2 +1,2 @@
 # osdev
-based docker image, python3, rust, ffmpeg, opencv
+docker based image, python3, rust, ruby, qemu, openocd, ffmpeg, opencv

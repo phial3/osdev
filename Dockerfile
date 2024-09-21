@@ -165,9 +165,8 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
 # arm-gnu-toolchain
 RUN if [ "$(uname -m)" = "aarch64" ]; then wget ${GCC_AARCH64}; else wget ${GCC_X86_64}; fi; \
-    tar -xJvf arm-gnu-toolchain-13.3*.tar.xz && \
-    rm -rf arm-gnu-toolchain-13.3*.tar.xz && \
-    mv -v ./arm-gnu-toolchain-13.3* ${OPT_APP}/
+    tar -xJvf arm-gnu-toolchain-13.3*.tar.xz && -C ${OPT_APP} \
+    rm -rf arm-gnu-toolchain-13.3*.tar.xz
 
 # Ruby
 COPY Gemfile .
