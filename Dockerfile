@@ -96,7 +96,10 @@ ARG BASEMENT_PACKAGES="\
     libavcodec-dev \
     libavformat-dev \
     libavdevice-dev \
+    libavfilter-dev \
+    libavutil-dev \
     libswscale-dev \
+    libswresample-dev \
     libv4l-dev \
     libjpeg-dev \
     libpng-dev \
@@ -116,7 +119,6 @@ ARG BASEMENT_PACKAGES="\
     libhidapi-dev \
     libgstreamer1.0-dev \
     libgstreamer-plugins-base1.0-dev \
-    libswresample-dev \
     libglu1-mesa-dev \
     freeglut3-dev \
     mesa-common-dev \
@@ -165,7 +167,7 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
 # arm-gnu-toolchain
 RUN if [ "$(uname -m)" = "aarch64" ]; then wget ${GCC_AARCH64}; else wget ${GCC_X86_64}; fi; \
-    tar -xJvf arm-gnu-toolchain-13.3*.tar.xz && -C ${OPT_APP} \
+    tar -xJvf arm-gnu-toolchain-13.3*.tar.xz -C ${OPT_APP} \
     rm -rf arm-gnu-toolchain-13.3*.tar.xz
 
 # Ruby
@@ -257,15 +259,16 @@ RUN git clone --recurse-submodules --depth 1 -b 4.x https://github.com/opencv/op
           -D WITH_FFMPEG=ON \
           -D BUILD_EXAMPLES=ON \
           -D BUILD_opencv_python3=ON \
-          -D FFMPEG_INCLUDE_DIR=${OPT_APP}/ffmpeg/include \
           -D FFMPEG_LIBRARIES=${OPT_APP}/ffmpeg/lib \
+          -D FFMPEG_INCLUDE_DIR=${OPT_APP}/ffmpeg/include \
+          -D PKG_CONFIG_PATH=${OPT_APP}/ffmpeg/lib/pkgconfig \
           .. && \
     make -j$(nproc) && \
     make install && \
     ldconfig && \
     make clean
 
-ENV PATH="$HOME/.cargo/bin:${OPT_APP}/openocd/bin:${OPT_APP}/ffmpeg/bin:${OPT_APP}/opencv/bin:$PATH"
+ENV PATH="$HOME/.cargo/bin:${OPT_APP}/openocd/bin:${OPT_APP}/ffmpeg/bin:${OPT_APP}/opencv/bin:${OPT_APP}/qemu/bin:$PATH"
 ENV LD_LIBRARY_PATH="${OPT_APP}/openocd/lib:${OPT_APP}/ffmpeg/lib:${OPT_APP}/opencv/lib:$LD_LIBRARY_PATH"
 
 # Timezone and locale
