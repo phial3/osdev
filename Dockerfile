@@ -150,7 +150,7 @@ RUN apt-get update && \
 
 # Update apt source and install necessary packages
 RUN apt-get update \
-    && apt-get install --no-install-recommends -y $BASEMENT_PACKAGES $ADDITIONAL_DEVELOPMENT_PACKAGES \
+    && apt-get install -y --no-install-recommends $BASEMENT_PACKAGES $ADDITIONAL_DEVELOPMENT_PACKAGES \
     && apt-get clean -q -y \
     && apt-get autoremove -q -y \
     && apt-get autoclean -q -y \
@@ -167,7 +167,7 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
 # arm-gnu-toolchain
 RUN if [ "$(uname -m)" = "aarch64" ]; then wget ${GCC_AARCH64}; else wget ${GCC_X86_64}; fi; \
-    tar -xJvf arm-gnu-toolchain-13.3*.tar.xz -C ${OPT_APP} \
+    tar -xJvf arm-gnu-toolchain-13.3*.tar.xz -C ${OPT_APP}/ ; \
     rm -rf arm-gnu-toolchain-13.3*.tar.xz
 
 # Ruby

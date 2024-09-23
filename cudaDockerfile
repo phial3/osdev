@@ -1,8 +1,5 @@
-# Arguments
-ARG VERSION=24.04
-
 # Basements
-FROM ubuntu:$VERSION
+FROM nvidia/cuda:12.6.1-cudnn-devel-ubuntu24.04
 
 LABEL maintainer="admin <<github.com/phial3/osdev>>"
 
@@ -11,7 +8,7 @@ ENV OPT_APP="/opt/app"
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Use USTC mirrors
-##RUN sed -i 's#//.*.ubuntu.com#//mirrors.ustc.edu.cn#g' /etc/apt/sources.list.d/ubuntu.sources
+RUN sed -i 's#//.*.ubuntu.com#//mirrors.ustc.edu.cn#g' /etc/apt/sources.list.d/ubuntu.sources
 
 # arm-gnu-toolchain
 ARG GCC_AARCH64=https://developer.arm.com/-/media/Files/downloads/gnu/13.3.rel1/binrel/arm-gnu-toolchain-13.3.rel1-aarch64-aarch64-none-elf.tar.xz
@@ -119,7 +116,6 @@ ARG BASEMENT_PACKAGES="\
     libgstreamer1.0-dev \
     libgstreamer-plugins-base1.0-dev \
     libglu1-mesa-dev \
-    libgl1-mesa-glx \
     freeglut3-dev \
     mesa-common-dev \
     libbz2-dev \
@@ -134,8 +130,6 @@ ARG BASEMENT_PACKAGES="\
     libfaac-dev \
     libopencore-amrnb-dev \
     libopencore-amrwb-dev \
-    libdc1394-22 \
-    libdc1394-22-dev \
     libxine2-dev \
     libopenexr-dev \
     zlib1g-dev \
@@ -158,12 +152,13 @@ RUN apt-get update && \
     apt-get upgrade -y && \
     echo "$BASEMENT_PACKAGES $ADDITIONAL_DEVELOPMENT_PACKAGES" | \
     xargs -n 1 bash -c 'apt-cache show $0 >/dev/null 2>&1 || { echo "Package $0 not found"; exit 1; }' && \
-    apt-get install --no-install-recommends -y $BASEMENT_PACKAGES $ADDITIONAL_DEVELOPMENT_PACKAGES && \
+    apt-get install -y --no-install-recommends $BASEMENT_PACKAGES $ADDITIONAL_DEVELOPMENT_PACKAGES && \
     apt-get clean -q -y && \
     apt-get autoremove -q -y && \
     apt-get autoclean -q -y && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+USER root
 WORKDIR /code
 
 # Ruby
@@ -177,7 +172,7 @@ RUN locale-gen en_US.UTF-8; \
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y; \
     # arm-gnu-toolchain
     if [ "$(uname -m)" = "aarch64" ]; then wget ${GCC_AARCH64}; else wget ${GCC_X86_64}; fi; \
-    tar -xJvf arm-gnu-toolchain-13.3*.tar.xz -C ${OPT_APP} \
+    tar -xJvf arm-gnu-toolchain-13.3*.tar.xz -C ${OPT_APP}/ ; \
     rm -rf arm-gnu-toolchain-13.3*.tar.xz; \
     # Rubygems
     gem install bundler && \
@@ -230,23 +225,38 @@ RUN git clone --recurse-submodules --depth 1 -b master https://github.com/openoc
 
 # ffmpeg
 RUN git clone --recurse-submodules --depth 1 -b release/7.0 https://github.com/FFmpeg/FFmpeg.git && \
-    cd FFmpeg && \
+    git clone --recurse-submodules --depth 1 -b master https://github.com/FFmpeg/nv-codec-headers.git && \
+    cd nv-codec-headers/; \
+    make install; \
+    cd ../FFmpeg/; \
     ./configure \
     --prefix=${OPT_APP}/ffmpeg \
-    --enable-gpl \
-    --enable-version3 \
-    --enable-small \
-    --enable-shared \
-    --enable-libmp3lame \
-    --enable-libvorbis \
-    --enable-libvpx \
-    --enable-libx264 \
-    --enable-libx265 \
-    --enable-libfdk-aac \
-    --enable-libass \
-    --enable-libfreetype \
+    --disable-asm \
+    --disable-x86asm \
+    --enable-cuda \
+    --enable-cuvid \
+    --enable-nvenc \
     --enable-nonfree \
-    --enable-openssl && \
+    --enable-pthreads \
+    --enable-libnpp \
+    --enable-gpl \
+    --enable-ffplay \
+    --enable-libvpx \
+    --enable-libx264  \
+    --enable-libx265 \
+    --enable-shared \
+    --enable-libass \
+    --enable-libaom \
+    --enable-libfdk-aac \
+    --enable-libfreetype \
+    --enable-libmp3lame \
+    --enable-libopus \
+    --enable-libtheora \
+    --enable-libvorbis \
+    --enable-openssl \
+    --extra-cflags=-I/usr/local/cuda/include \
+    --extra-cflags=-fPIC \
+    --extra-ldflags=-L/usr/local/cuda/lib64 && \
     make -j$(nproc) && \
     make install && \
     ldconfig && \
@@ -259,9 +269,7 @@ RUN git clone --recurse-submodules --depth 1 -b 4.x https://github.com/opencv/op
     mkdir build && cd build && \
     cmake -D CMAKE_BUILD_TYPE=RELEASE \
           -D CMAKE_INSTALL_PREFIX=${OPT_APP}/opencv \
-          -D CMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -g -fPIC -O3 -std=c++11 -fopenmp" \
           -D OPENCV_EXTRA_MODULES_PATH=/code/opencv_contrib/modules \
-          -D CUDA_NVCC_FLAGS="-std=c++11 --expt-relaxed-constexpr" \
           -D ENABLE_PRECOMPILED_HEADERS=OFF \
           -D BUILD_TESTS=OFF \
           -D BUILD_EXAMPLES=OFF \
