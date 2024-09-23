@@ -129,7 +129,6 @@ ARG ADDITIONAL_DEVELOPMENT_PACKAGES="\
     vim \
     nano \
     neovim \
-    wrk \
     htop \
     tmux \
     screen \
@@ -167,6 +166,9 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
 # arm-gnu-toolchain
 RUN if [ "$(uname -m)" = "aarch64" ]; then wget ${GCC_AARCH64}; else wget ${GCC_X86_64}; fi; \
+    # 没有目录，先创建
+    if [ ! -d ${OPT_APP} ]; then mkdir -p ${OPT_APP}; fi; \
+    ## 解压到指定目录
     tar -xJvf arm-gnu-toolchain-13.3*.tar.xz -C ${OPT_APP}/ ; \
     rm -rf arm-gnu-toolchain-13.3*.tar.xz
 
