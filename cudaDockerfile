@@ -4,14 +4,11 @@ ARG VERSION=24.04
 # Basements
 FROM ubuntu:$VERSION
 
+LABEL maintainer="admin <<github.com/phial3/osdev>>"
+
 # Environments
-ENV OPT_APP="/opt/app" \
-    DEBIAN_FRONTEND=noninteractive \
-    TZ=Asia/Shanghai   \
-    LANG=en_US.UTF-8   \
-    LANGUAGE=en_US:en  \
-    LC_ALL=en_US.UTF-8 \
-    RUBYOPT=-W0
+ENV OPT_APP="/opt/app"
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Use USTC mirrors
 ##RUN sed -i 's#//.*.ubuntu.com#//mirrors.ustc.edu.cn#g' /etc/apt/sources.list.d/ubuntu.sources
@@ -47,6 +44,7 @@ ARG BASEMENT_PACKAGES="\
     gawk \
     gperf \
     git \
+    git-lfs \
     curl \
     wget \
     tree \
@@ -101,6 +99,7 @@ ARG BASEMENT_PACKAGES="\
     libswscale-dev \
     libswresample-dev \
     libv4l-dev \
+    v4l-utils \
     libjpeg-dev \
     libpng-dev \
     libtiff-dev \
@@ -108,7 +107,6 @@ ARG BASEMENT_PACKAGES="\
     libelf-dev \
     gfortran \
     openexr \
-    libatlas-base-dev \
     python3 \
     python3-dev \
     python3-venv \
@@ -117,11 +115,29 @@ ARG BASEMENT_PACKAGES="\
     libtbb-dev \
     libopenexr-dev \
     libhidapi-dev \
+    libatlas-base-dev \
+    libreadline-dev \
     libgstreamer1.0-dev \
     libgstreamer-plugins-base1.0-dev \
     libglu1-mesa-dev \
+    libgl1-mesa-glx \
     freeglut3-dev \
     mesa-common-dev \
+    libbz2-dev \
+    libsm6 \
+    libxrender1 \
+    libxext-dev \
+    libgomp1 \
+    liblzma-dev \
+    libblas-dev \
+    libblas3 \
+    libopenblas-dev \
+    libfaac-dev \
+    libopencore-amrnb-dev \
+    libopencore-amrwb-dev \
+    libdc1394-22 \
+    libdc1394-22-dev \
+    libxine2-dev \
     "
 
 ARG ADDITIONAL_DEVELOPMENT_PACKAGES="\
@@ -134,45 +150,36 @@ ARG ADDITIONAL_DEVELOPMENT_PACKAGES="\
     tmux \
     screen \
     rsync \
-    # qemu-kvm \
-    # virtinst \
-    # bridge-utils \
-    # libvirt-daemon \
-    # libvirt-clients \
-    # libvirt-daemon-system \
     "
 
-# Check package availability
+# Check package availability and update install necessary packages
 RUN apt-get update && \
     apt-get upgrade -y && \
     echo "$BASEMENT_PACKAGES $ADDITIONAL_DEVELOPMENT_PACKAGES" | \
-    xargs -n 1 bash -c 'apt-cache show $0 >/dev/null 2>&1 || { echo "Package $0 not found"; exit 1; }'
-
-# Update apt source and install necessary packages
-RUN apt-get update \
-    && apt-get install --no-install-recommends -y $BASEMENT_PACKAGES $ADDITIONAL_DEVELOPMENT_PACKAGES \
-    && apt-get clean -q -y \
-    && apt-get autoremove -q -y \
-    && apt-get autoclean -q -y \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    xargs -n 1 bash -c 'apt-cache show $0 >/dev/null 2>&1 || { echo "Package $0 not found"; exit 1; }' && \
+    apt-get install --no-install-recommends -y $BASEMENT_PACKAGES $ADDITIONAL_DEVELOPMENT_PACKAGES && \
+    apt-get clean -q -y && \
+    apt-get autoremove -q -y && \
+    apt-get autoclean -q -y && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 WORKDIR /code
 
+# Ruby
+COPY Gemfile .
 # GDB
 COPY .gdbinit /root/.gdbinit
 COPY auto /root/.gdbinit.d/auto
 
-# rust
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-
-# arm-gnu-toolchain
-RUN if [ "$(uname -m)" = "aarch64" ]; then wget ${GCC_AARCH64}; else wget ${GCC_X86_64}; fi; \
+RUN locale-gen en_US.UTF-8; \
+    # rustup
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y; \
+    # arm-gnu-toolchain
+    if [ "$(uname -m)" = "aarch64" ]; then wget ${GCC_AARCH64}; else wget ${GCC_X86_64}; fi; \
     tar -xJvf arm-gnu-toolchain-13.3*.tar.xz -C ${OPT_APP} \
-    rm -rf arm-gnu-toolchain-13.3*.tar.xz
-
-# Ruby
-COPY Gemfile .
-RUN gem install bundler && \
+    rm -rf arm-gnu-toolchain-13.3*.tar.xz; \
+    # Rubygems
+    gem install bundler && \
     bundle config set --local without 'development' && \
     bundle install --retry 3
 
@@ -184,6 +191,7 @@ RUN git clone --recurse-submodules --depth 1 -b stable-9.1 https://github.com/qe
     --target-list=aarch64-softmmu,aarch64-linux-user,x86_64-softmmu,x86_64-linux-user,riscv64-softmmu,riscv64-linux-user,loongarch64-softmmu,loongarch64-linux-user \
     --enable-modules \
     --enable-tcg-interpreter \
+    --enable-debug \
     --enable-debug-tcg       \
     --enable-slirp \
     --enable-linux-user \
@@ -248,7 +256,7 @@ RUN git clone --recurse-submodules --depth 1 -b 4.x https://github.com/opencv/op
     git clone --recurse-submodules --depth 1 -b 4.x https://github.com/opencv/opencv_contrib.git && \
     cd opencv && \
     mkdir build && cd build && \
-    cmake -D CMAKE_BUILD_TYPE=Release \
+    cmake -D CMAKE_BUILD_TYPE=RELEASE \
           -D CMAKE_INSTALL_PREFIX=${OPT_APP}/opencv \
           -D OPENCV_EXTRA_MODULES_PATH=/code/opencv_contrib/modules \
           -D ENABLE_PRECOMPILED_HEADERS=OFF \
@@ -259,6 +267,8 @@ RUN git clone --recurse-submodules --depth 1 -b 4.x https://github.com/opencv/op
           -D WITH_OPENGL=ON \
           -D WITH_FFMPEG=ON \
           -D BUILD_EXAMPLES=ON \
+          -D BUILD_opencv_world=OFF \
+          -D BUILD_opencv_python2=OFF \
           -D BUILD_opencv_python3=ON \
           -D FFMPEG_LIBRARIES=${OPT_APP}/ffmpeg/lib \
           -D FFMPEG_INCLUDE_DIR=${OPT_APP}/ffmpeg/include \
@@ -271,6 +281,11 @@ RUN git clone --recurse-submodules --depth 1 -b 4.x https://github.com/opencv/op
 
 ENV PATH="$HOME/.cargo/bin:${OPT_APP}/openocd/bin:${OPT_APP}/ffmpeg/bin:${OPT_APP}/opencv/bin:${OPT_APP}/qemu/bin:$PATH"
 ENV LD_LIBRARY_PATH="${OPT_APP}/openocd/lib:${OPT_APP}/ffmpeg/lib:${OPT_APP}/opencv/lib:$LD_LIBRARY_PATH"
+ENV TZ=Asia/Shanghai   \
+    LANG=en_US.UTF-8   \
+    LANGUAGE=en_US:en  \
+    LC_ALL=en_US.UTF-8 \
+    RUBYOPT=-W0
 
 # Timezone and locale
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime \

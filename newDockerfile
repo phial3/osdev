@@ -241,6 +241,7 @@ RUN git clone --recurse-submodules --depth 1 -b 4.x https://github.com/opencv/op
           -D CMAKE_INSTALL_PREFIX=${OPT_APP}/opencv \
           -D OPENCV_EXTRA_MODULES_PATH=/code/opencv_contrib/modules \
           -D ENABLE_PRECOMPILED_HEADERS=OFF \
+          -D BUILD_TESTS=OFF \
           -D WITH_TBB=ON \
           -D WITH_V4L=ON \
           -D WITH_QT=ON \
