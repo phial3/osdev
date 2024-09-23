@@ -242,12 +242,10 @@ RUN git clone --recurse-submodules --depth 1 -b 4.x https://github.com/opencv/op
           -D OPENCV_EXTRA_MODULES_PATH=/code/opencv_contrib/modules \
           -D ENABLE_PRECOMPILED_HEADERS=OFF \
           -D BUILD_TESTS=OFF \
+          -D BUILD_EXAMPLES=OFF \
           -D WITH_TBB=ON \
           -D WITH_V4L=ON \
-          -D WITH_QT=ON \
-          -D WITH_OPENGL=ON \
           -D WITH_FFMPEG=ON \
-          -D BUILD_EXAMPLES=ON \
           -D BUILD_opencv_python3=ON \
           -D FFMPEG_LIBRARIES=${OPT_APP}/ffmpeg/lib \
           -D FFMPEG_INCLUDE_DIR=${OPT_APP}/ffmpeg/include \

@@ -78,7 +78,6 @@ ARG BASEMENT_PACKAGES="\
     libxcb1-dev \
     libxcb-shm0-dev \
     libxcb-xfixes0-dev \
-    zlib1g-dev \
     libopus-dev \
     libvpx-dev \
     libx264-dev \
@@ -138,6 +137,8 @@ ARG BASEMENT_PACKAGES="\
     libdc1394-22 \
     libdc1394-22-dev \
     libxine2-dev \
+    libopenexr-dev \
+    zlib1g-dev \
     "
 
 ARG ADDITIONAL_DEVELOPMENT_PACKAGES="\
@@ -258,15 +259,28 @@ RUN git clone --recurse-submodules --depth 1 -b 4.x https://github.com/opencv/op
     mkdir build && cd build && \
     cmake -D CMAKE_BUILD_TYPE=RELEASE \
           -D CMAKE_INSTALL_PREFIX=${OPT_APP}/opencv \
+          -D CMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -g -fPIC -O3 -std=c++11 -fopenmp" \
           -D OPENCV_EXTRA_MODULES_PATH=/code/opencv_contrib/modules \
+          -D CUDA_NVCC_FLAGS="-std=c++11 --expt-relaxed-constexpr" \
           -D ENABLE_PRECOMPILED_HEADERS=OFF \
           -D BUILD_TESTS=OFF \
+          -D BUILD_EXAMPLES=OFF \
+          -D CUDA_ARCH_BIN=7.5 \
+          -D CUDA_FAST_MATH=ON \
           -D WITH_TBB=ON \
+          -D WITH_CUDA=ON \
+          -D WITH_CUDNN=ON \
+          -D WITH_CUBLAS=ON \
+          -D WITH_CUFFT=ON \
+          -D WITH_NVCUVID=ON \
           -D WITH_V4L=ON \
-          -D WITH_QT=ON \
-          -D WITH_OPENGL=ON \
+          -D WITH_LIBV4L=ON \
           -D WITH_FFMPEG=ON \
-          -D BUILD_EXAMPLES=ON \
+          -D WITH_OPENEXR=ON \
+          -D OPENCV_DNN_CUDA=ON \
+          -D OPENCV_ENABLE_NONFREE=ON \
+          -D OPENCV_VS_VERSIONINFO_SKIP=ON \
+          -D OPENCV_GENERATE_PKGCONFIG=ON \
           -D BUILD_opencv_world=OFF \
           -D BUILD_opencv_python2=OFF \
           -D BUILD_opencv_python3=ON \
