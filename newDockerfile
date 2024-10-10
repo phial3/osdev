@@ -211,7 +211,7 @@ RUN git clone --recurse-submodules --depth 1 -b master https://github.com/openoc
     make clean
 
 # ffmpeg
-RUN git clone --recurse-submodules --depth 1 -b release/7.0 https://github.com/FFmpeg/FFmpeg.git && \
+RUN git clone --recurse-submodules --depth 1 -b release/7.1 https://github.com/FFmpeg/FFmpeg.git && \
     cd FFmpeg && \
     ./configure \
     --prefix=${OPT_APP}/ffmpeg \
