@@ -218,6 +218,7 @@ RUN git clone --recurse-submodules --depth 1 -b release/7.1 https://github.com/F
     --disable-asm \
     --disable-x86asm \
     --enable-gpl \
+    --enable-srt \
     --enable-version3 \
     --enable-small \
     --enable-shared \
@@ -232,6 +233,16 @@ RUN git clone --recurse-submodules --depth 1 -b release/7.1 https://github.com/F
     --enable-libfdk-aac \
     --enable-libass \
     --enable-libfreetype \
+    --enable-libopus \
+    --enable-libdav1d \
+    --enable-libaom \
+    --enable-libbluray \
+    --enable-librubberband \
+    --enable-libspeex \
+    --enable-libsoxr \
+    --enable-libvidstab \
+    --enable-libzimg \
+    --enable-libwebp \
     --enable-nonfree \
     --enable-openssl && \
     make -j$(nproc) && \
@@ -242,7 +253,7 @@ RUN git clone --recurse-submodules --depth 1 -b release/7.1 https://github.com/F
 # opencv
 RUN git clone --recurse-submodules --depth 1 -b 4.x https://github.com/opencv/opencv.git && \
     git clone --recurse-submodules --depth 1 -b 4.x https://github.com/opencv/opencv_contrib.git && \
-    cd opencv && \
+    cd opencv && git checkout 4.10.0 && \
     mkdir build && cd build && \
     cmake -D CMAKE_BUILD_TYPE=Release \
           -D CMAKE_INSTALL_PREFIX=${OPT_APP}/opencv \

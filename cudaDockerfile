@@ -234,9 +234,8 @@ RUN git clone --recurse-submodules --depth 1 -b master https://github.com/openoc
 # ffmpeg
 RUN git clone --recurse-submodules --depth 1 -b release/7.1 https://github.com/FFmpeg/FFmpeg.git && \
     git clone --recurse-submodules --depth 1 -b master https://github.com/FFmpeg/nv-codec-headers.git && \
-    cd nv-codec-headers/; \
-    make install; \
-    cd ../FFmpeg/; \
+    cd nv-codec-headers && make install ; \
+    cd ../FFmpeg/ ; \
     ./configure \
     --prefix=${OPT_APP}/ffmpeg \
     --disable-asm \
@@ -244,15 +243,15 @@ RUN git clone --recurse-submodules --depth 1 -b release/7.1 https://github.com/F
     --enable-cuda \
     --enable-cuvid \
     --enable-nvenc \
+    --enable-libnpp \
     --enable-nonfree \
     --enable-pthreads \
-    --enable-libnpp \
     --enable-gpl \
+    --enable-shared \
     --enable-ffplay \
     --enable-libvpx \
     --enable-libx264  \
     --enable-libx265 \
-    --enable-shared \
     --enable-libass \
     --enable-libaom \
     --enable-libfdk-aac \
@@ -262,8 +261,8 @@ RUN git clone --recurse-submodules --depth 1 -b release/7.1 https://github.com/F
     --enable-libtheora \
     --enable-libvorbis \
     --enable-openssl \
-    --extra-cflags=-I/usr/local/cuda/include \
     --extra-cflags=-fPIC \
+    --extra-cflags=-I/usr/local/cuda/include \
     --extra-ldflags=-L/usr/local/cuda/lib64 && \
     make -j$(nproc) && \
     make install && \
