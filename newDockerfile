@@ -215,10 +215,15 @@ RUN git clone --recurse-submodules --depth 1 -b release/7.1 https://github.com/F
     cd FFmpeg && \
     ./configure \
     --prefix=${OPT_APP}/ffmpeg \
+    --disable-asm \
+    --disable-x86asm \
     --enable-gpl \
     --enable-version3 \
     --enable-small \
     --enable-shared \
+    --enable-swscale \
+    --enable-swresample \
+    --enable-pthreads \
     --enable-libmp3lame \
     --enable-libvorbis \
     --enable-libvpx \
