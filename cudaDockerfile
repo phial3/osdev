@@ -47,7 +47,6 @@ ARG BASEMENT_PACKAGES="\
     gawk \
     gperf \
     git \
-    git-lfs \
     curl \
     wget \
     tree \
@@ -66,20 +65,20 @@ ARG BASEMENT_PACKAGES="\
     virtualenv \
     ninja-build \
     pkg-config \
-    binutils-dev \
-    libboost-all-dev \
-    libpixman-1-dev \
-    libglib2.0-dev \
-    libusb-1.0.0-dev \
-    libclang-dev \
     libass-dev \
-    libfreetype6-dev \
     libsdl2-dev \
-    libtheora-dev \
     libva-dev \
+    libclang-dev \
     libvdpau-dev \
     libxcb1-dev \
+    libtheora-dev \
+    binutils-dev \
+    libglib2.0-dev \
+    libpixman-1-dev \
     libxcb-shm0-dev \
+    libusb-1.0.0-dev \
+    libboost-all-dev \
+    libfreetype6-dev \
     libxcb-xfixes0-dev \
     libopus-dev \
     libvpx-dev \
@@ -91,6 +90,14 @@ ARG BASEMENT_PACKAGES="\
     libvorbis-dev \
     libxvidcore-dev \
     libunistring-dev \
+    libsrt-openssl-dev \
+    librubberband-dev \
+    libbluray-dev \
+    libdav1d-dev \
+    libvidstab-dev \
+    libsoxr-dev \
+    libspeex-dev \
+    libzimg-dev \
     libaom-dev \
     libgtk-3-dev \
     libavcodec-dev \
@@ -100,13 +107,14 @@ ARG BASEMENT_PACKAGES="\
     libavutil-dev \
     libswscale-dev \
     libswresample-dev \
+    libatlas-base-dev \
     libv4l-dev \
-    v4l-utils \
     libjpeg-dev \
     libpng-dev \
     libtiff-dev \
     libssl-dev \
     libelf-dev \
+    zlib1g-dev \
     gfortran \
     openexr \
     python3 \
@@ -117,28 +125,27 @@ ARG BASEMENT_PACKAGES="\
     libtbb-dev \
     libopenexr-dev \
     libhidapi-dev \
-    libatlas-base-dev \
-    libreadline-dev \
     libgstreamer1.0-dev \
     libgstreamer-plugins-base1.0-dev \
     libglu1-mesa-dev \
     freeglut3-dev \
     mesa-common-dev \
-    libbz2-dev \
+    git-lfs \
     libsm6 \
+    libblas3 \
+    libgomp1 \
+    v4l-utils \
+    libfaac-dev \
+    libbz2-dev \
     libxrender1 \
     libxext-dev \
-    libgomp1 \
     liblzma-dev \
     libblas-dev \
-    libblas3 \
+    libxine2-dev \
     libopenblas-dev \
-    libfaac-dev \
+    libreadline-dev \
     libopencore-amrnb-dev \
     libopencore-amrwb-dev \
-    libxine2-dev \
-    libopenexr-dev \
-    zlib1g-dev \
     "
 
 ARG ADDITIONAL_DEVELOPMENT_PACKAGES="\
@@ -231,7 +238,17 @@ RUN git clone --recurse-submodules --depth 1 -b master https://github.com/openoc
     ldconfig && \
     make clean
 
-# ffmpeg
+# srt
+RUN git clone --recurse-submodules --depth 1 -b master https://github.com/Haivision/srt.git && \
+    cd srt && \
+    mkdir build && cd build && \
+    cmake .. && \
+    make -j$(nproc) && \
+    make install && \
+    ldconfig && \
+    make clean
+
+# ffmpeg 7.1
 RUN git clone --recurse-submodules --depth 1 -b release/7.1 https://github.com/FFmpeg/FFmpeg.git && \
     git clone --recurse-submodules --depth 1 -b master https://github.com/FFmpeg/nv-codec-headers.git && \
     cd nv-codec-headers && make install ; \
@@ -240,26 +257,52 @@ RUN git clone --recurse-submodules --depth 1 -b release/7.1 https://github.com/F
     --prefix=${OPT_APP}/ffmpeg \
     --disable-asm \
     --disable-x86asm \
-    --enable-cuda \
-    --enable-cuvid \
-    --enable-nvenc \
-    --enable-libnpp \
-    --enable-nonfree \
-    --enable-pthreads \
+    # --enable-cuda \
+    # --enable-cuvid \
+    # --enable-nvenc \
+    # --enable-nvdec \
+    # --enable-libnpp \
+    # --enable-vaapi \
+    # --enable-vdpau \
+    ## 启用指定的硬件加速器，支持的硬件加速器名称见 `ffmpeg -hwaccels` 命令, NAME 参数可选：
+    ## cuda： NVIDIA CUDA 加速，适用于带有 CUDA 支持的 NVIDIA GPU，用于视频解码和编码加速。
+    ## nvdec：NVIDIA 的 NVDEC 硬件解码器，与 CUDA 一起使用。
+    ## nvenc：NVIDIA 的 NVENC 硬件编码器，用于加速视频编码。
+    ## vaapi：适用于 Intel 和 AMD 硬件的 Video Acceleration API，用于解码和编码加速，支持包括 H.264、HEVC、VP8、VP9 等多种格式。
+    ## dxva2：DirectX Video Acceleration 2，适用于 Windows 系统上的解码加速。
+    ## qsv：Intel Quick Sync Video，用于 Intel CPU 上的硬件加速解码和编码。
+    ## videotoolbox：适用于 macOS 系统的硬件加速，主要用于解码。
+    ## d3d11va：Direct3D 11 Video Acceleration，Windows 系统上支持的一种加速方式。
+    # --enable-hwaccel=NAME  
     --enable-gpl \
+    --enable-nonfree \
+    --enable-version3 \
+    --enable-small \
     --enable-shared \
     --enable-ffplay \
-    --enable-libvpx \
-    --enable-libx264  \
-    --enable-libx265 \
-    --enable-libass \
-    --enable-libaom \
-    --enable-libfdk-aac \
-    --enable-libfreetype \
+    --enable-pthreads \
+    --enable-swscale \
+    --enable-swresample \
     --enable-libmp3lame \
-    --enable-libopus \
     --enable-libtheora \
     --enable-libvorbis \
+    --enable-libsrt \
+    --enable-libvpx \
+    --enable-libx264 \
+    --enable-libx265 \
+    --enable-libfdk-aac \
+    --enable-libass \
+    --enable-libfreetype \
+    --enable-libopus \
+    --enable-libdav1d \
+    --enable-libaom \
+    --enable-libbluray \
+    --enable-librubberband \
+    --enable-libspeex \
+    --enable-libsoxr \
+    --enable-libvidstab \
+    --enable-libzimg \
+    --enable-libwebp \
     --enable-openssl \
     --extra-cflags=-fPIC \
     --extra-cflags=-I/usr/local/cuda/include \
@@ -269,34 +312,39 @@ RUN git clone --recurse-submodules --depth 1 -b release/7.1 https://github.com/F
     ldconfig && \
     make clean
 
-# opencv
-RUN git clone --recurse-submodules --depth 1 -b 4.x https://github.com/opencv/opencv.git && \
+# opencv 4.10.0
+RUN git clone --recurse-submodules -b 4.x https://github.com/opencv/opencv.git && \
     git clone --recurse-submodules --depth 1 -b 4.x https://github.com/opencv/opencv_contrib.git && \
-    cd opencv && \
+    cd opencv && git checkout 4.10.0 && \
     mkdir build && cd build && \
     cmake -D CMAKE_BUILD_TYPE=RELEASE \
           -D CMAKE_INSTALL_PREFIX=${OPT_APP}/opencv \
           -D OPENCV_EXTRA_MODULES_PATH=/code/opencv_contrib/modules \
           -D ENABLE_PRECOMPILED_HEADERS=OFF \
+          -D BUILD_DOCS=OFF \
           -D BUILD_TESTS=OFF \
           -D BUILD_EXAMPLES=OFF \
+          ## Feature
           -D CUDA_ARCH_BIN=7.5 \
           -D CUDA_FAST_MATH=ON \
           -D WITH_TBB=ON \
+          -D WITH_IPP=ON \
+          -D WITH_V4L=ON \
           -D WITH_CUDA=ON \
           -D WITH_CUDNN=ON \
           -D WITH_CUBLAS=ON \
           -D WITH_CUFFT=ON \
           -D WITH_NVCUVID=ON \
-          -D WITH_V4L=ON \
+          -D WITH_OPENCL=ON \
           -D WITH_LIBV4L=ON \
           -D WITH_FFMPEG=ON \
           -D WITH_OPENEXR=ON \
+          ##
           -D OPENCV_DNN_CUDA=ON \
           -D OPENCV_ENABLE_NONFREE=ON \
           -D OPENCV_VS_VERSIONINFO_SKIP=ON \
           -D OPENCV_GENERATE_PKGCONFIG=ON \
-          -D BUILD_opencv_world=OFF \
+          -D BUILD_opencv_world=ON \
           -D BUILD_opencv_python2=OFF \
           -D BUILD_opencv_python3=ON \
           -D FFMPEG_LIBRARIES=${OPT_APP}/ffmpeg/lib \
