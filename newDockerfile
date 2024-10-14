@@ -132,6 +132,8 @@ ARG BASEMENT_PACKAGES="\
     libblas3 \
     libgomp1 \
     v4l-utils \
+    libslirp0 \
+    libslirp-dev \
     libfaac-dev \
     libbz2-dev \
     libxrender1 \
